@@ -76,11 +76,13 @@
       </div>
 
       <!--
-        FORM SETUP — pick ONE:
-        (a) Formspree: create a form at https://formspree.io, then replace
-            YOUR_FORM_ID below in the action attribute.
-        (b) Netlify Forms: add  data-netlify="true"  to the <form> tag and
-            deploy on Netlify. No action URL needed. (See BEFORE-LAUNCH.md.)
+        FORM STATUS: until a real Formspree form ID replaces YOUR_FORM_ID below,
+        assets/js/site.js intercepts submit and opens a pre-filled email to
+        charlie@shearsrealty.com, so the form works right now. To upgrade to a
+        proper inbox form: create one at https://formspree.io using
+        charlie@shearsrealty.com and paste its ID over YOUR_FORM_ID. The JS
+        fallback then switches itself off automatically. (Netlify Forms is the
+        alternative if you ever move off Vercel — see README-DEPLOY.md.)
       -->
       <form class="form-card"
             action="https://formspree.io/f/YOUR_FORM_ID"
