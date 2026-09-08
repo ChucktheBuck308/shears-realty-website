@@ -166,6 +166,8 @@ p { margin: 0; }
   display: flex; align-items: flex-end; padding: 16px; min-height: 220px;
 }
 .ph > img { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; }
+.ph--portrait > img { object-position: center top; }
+.ph--hero > img { object-position: center 20%; }
 .ph__label {
   font-family: var(--mono); font-size: 10px; letter-spacing: .14em;
   text-transform: uppercase; color: var(--stone); position: relative;
