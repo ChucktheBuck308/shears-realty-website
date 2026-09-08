@@ -295,5 +295,8 @@ fieldset { border: 0; padding: 0; margin: 0 0 26px; }
 .site-footer__legal { margin-top: clamp(28px, 4vw, 40px); padding-block: 22px 48px; border-top: 1px solid var(--line); }
 /* TREC §535.155: brokerage + designated broker name must appear, broker name
    at least half the size of the largest contact info on the piece. */
-.disclosure { font-family: var(--mono); font-size: 11px; letter-spacing: .06em; color: var(--ink-soft); margin: 0; }
+/* 13px so the designated broker's name here clears "at least half the size of
+   the largest contact information on the piece" (TREC §535.155). The largest
+   contact element on any page is the contact-page phone at ~24px. */
+.disclosure { font-family: var(--mono); font-size: 13px; letter-spacing: .04em; color: var(--ink-soft); margin: 0; line-height: 1.6; }
 .copyline { font-size: 12.5px; color: var(--stone-mute); margin: 10px 0 0; }
