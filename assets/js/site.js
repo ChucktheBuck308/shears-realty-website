@@ -34,17 +34,19 @@
   var y = document.querySelector('[data-year]');
   if (y) y.textContent = new Date().getFullYear();
 
-  /* ---- hero background: a slow recursive tree (fractal) ----
-     Faint, behind the hero only, non-interactive. Honours reduced-motion by
-     drawing a single static frame. Pure canvas, no dependencies. */
-  (function fractalHero() {
+  /* ---- hero background: slow topographic contours (noise-based) ----
+     Faint brass survey-map lines that drift. Behind the hero only,
+     non-interactive. Reduced-motion draws a single static frame. No deps. */
+  (function contourHero() {
     var canvas = document.getElementById('fractal');
     if (!canvas || !canvas.getContext) return;
     var ctx = canvas.getContext('2d');
     var host = canvas.parentElement;
     var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     var w = 0, h = 0, dpr = Math.min(window.devicePixelRatio || 1, 2);
-    var GOLD = 'rgba(185,138,52,'; // --brass, alpha appended per branch
+    var STEP = 26;                 // grid cell size (css px)
+    var LEVELS = [0.12, 0.24, 0.36, 0.48, 0.60, 0.72, 0.84];
+    var BRASS = '168,128,44';     // --brass rgb
 
     function resize() {
       w = host.clientWidth; h = host.clientHeight;
@@ -52,33 +54,69 @@
       ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
 
-    function branch(x, y, len, ang, depth, sway) {
-      if (depth === 0 || len < 3) return;
-      var x2 = x + Math.cos(ang) * len;
-      var y2 = y + Math.sin(ang) * len;
-      ctx.strokeStyle = GOLD + (0.06 + depth * 0.012).toFixed(3) + ')';
-      ctx.lineWidth = Math.max(depth * 0.5, 0.6);
-      ctx.beginPath();
-      ctx.moveTo(x, y); ctx.lineTo(x2, y2); ctx.stroke();
-      var spread = 0.42 + Math.sin(sway + depth) * 0.09;
-      branch(x2, y2, len * 0.76, ang - spread, depth - 1, sway);
-      branch(x2, y2, len * 0.76, ang + spread * 0.82, depth - 1, sway);
-      if (depth % 2 === 0) branch(x2, y2, len * 0.5, ang + Math.sin(sway) * 0.15, depth - 2, sway);
+    // cheap hash-based value noise + 2 octaves of fbm
+    function hash(x, y) {
+      var n = (x * 374761393 + y * 668265263) | 0;
+      n = (n ^ (n >> 13)) * 1274126177 | 0;
+      return ((n ^ (n >> 16)) >>> 0) / 4294967295;
+    }
+    function vnoise(x, y) {
+      var xi = Math.floor(x), yi = Math.floor(y), xf = x - xi, yf = y - yi;
+      var u = xf * xf * (3 - 2 * xf), v = yf * yf * (3 - 2 * yf);
+      var a = hash(xi, yi), b = hash(xi + 1, yi), c = hash(xi, yi + 1), d = hash(xi + 1, yi + 1);
+      return (a * (1 - u) + b * u) * (1 - v) + (c * (1 - u) + d * u) * v;
+    }
+    function field(x, y, t) {
+      var s = 0.010;
+      return vnoise(x * s + t, y * s - t * 0.5) * 0.65
+           + vnoise(x * s * 2.3 + 5.2, y * s * 2.3 + t * 0.3) * 0.35;
     }
 
-    function draw(sway) {
+    function lerp(a, b, t) { return a + (b - a) * t; }
+
+    function draw(t) {
       ctx.clearRect(0, 0, w, h);
-      var baseLen = Math.min(h, 620) * 0.20;
-      branch(w * 0.5, h + 6, baseLen, -Math.PI / 2 + Math.sin(sway) * 0.05, 10, sway);
-      branch(w * 0.14, h + 6, baseLen * 0.7, -Math.PI / 2 - 0.2 + Math.sin(sway * 1.3) * 0.06, 8, sway * 1.3);
-      branch(w * 0.86, h + 6, baseLen * 0.7, -Math.PI / 2 + 0.2 + Math.sin(sway * 0.8) * 0.06, 8, sway * 0.8);
+      ctx.lineWidth = 1;
+      var cols = Math.ceil(w / STEP) + 1, rows = Math.ceil(h / STEP) + 1;
+      var i, j, li, x0, y0, x1, y1, va, vb, vc, vd, L, idx, seg;
+      for (li = 0; li < LEVELS.length; li++) {
+        L = LEVELS[li];
+        ctx.strokeStyle = 'rgba(' + BRASS + ',' + (0.055 + li * 0.014).toFixed(3) + ')';
+        ctx.beginPath();
+        for (j = 0; j < rows; j++) {
+          for (i = 0; i < cols; i++) {
+            x0 = i * STEP; y0 = j * STEP; x1 = x0 + STEP; y1 = y0 + STEP;
+            va = field(x0, y0, t); vb = field(x1, y0, t);
+            vc = field(x1, y1, t); vd = field(x0, y1, t);
+            idx = (va > L ? 1 : 0) | (vb > L ? 2 : 0) | (vc > L ? 4 : 0) | (vd > L ? 8 : 0);
+            if (idx === 0 || idx === 15) continue;
+            // edge crossing points (top, right, bottom, left)
+            var T = [x0 + STEP * (L - va) / (vb - va), y0];
+            var R = [x1, y0 + STEP * (L - vb) / (vc - vb)];
+            var B = [x0 + STEP * (L - vd) / (vc - vd), y1];
+            var Lf = [x0, y0 + STEP * (L - va) / (vd - va)];
+            seg = MS[idx];
+            for (var k = 0; k < seg.length; k += 2) {
+              var p = [T, R, B, Lf][seg[k]], q = [T, R, B, Lf][seg[k + 1]];
+              ctx.moveTo(p[0], p[1]); ctx.lineTo(q[0], q[1]);
+            }
+          }
+        }
+        ctx.stroke();
+      }
     }
+    // marching-squares segment table (edge indices: 0=T 1=R 2=B 3=L)
+    var MS = {
+      1: [0, 3], 2: [0, 1], 3: [1, 3], 4: [1, 2], 5: [0, 1, 2, 3], 6: [0, 2],
+      7: [2, 3], 8: [2, 3], 9: [0, 2], 10: [0, 3, 1, 2], 11: [1, 2],
+      12: [1, 3], 13: [0, 1], 14: [0, 3]
+    };
 
     var t = 0, raf = 0, last = 0;
     function loop(now) {
       raf = requestAnimationFrame(loop);
-      if (now - last < 66) return;      // ~15fps is plenty for a faint sway
-      last = now; t += 0.006;
+      if (now - last < 60) return;   // ~16fps, plenty for a slow drift
+      last = now; t += 0.0016;
       draw(t);
     }
 
