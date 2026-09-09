@@ -9,17 +9,20 @@
    ========================================================================= */
 
 :root {
-  /* Palette */
-  --bone:        #F7F3EA;   /* primary ground */
-  --brass:       #A8802C;   /* accent only */
-  --umber:       #241C12;   /* headlines, dark sections */
-  --linen:       #C9BCA4;   /* dividers, muted text on umber, photo blocks */
-  --stone:       #6E6152;   /* body copy on bone */
-  --card:        #FFFDF8;   /* raised panels on bone */
-  --line:        #E5DCC9;   /* hairline dividers */
-  --line-strong: #DED3BF;
-  --stone-mute:  #8A7A62;   /* captions, labels */
-  --ink-soft:    #4A4034;   /* body copy inside cards */
+  /* Palette — lightened 2026-09: brighter ground, no dark fields, fresh secondary */
+  --bone:        #FCFAF5;   /* primary ground (near-white warm) */
+  --brass:       #B98A34;   /* warm gold accent — rules, labels, one CTA */
+  --umber:       #2A2622;   /* headlines, dark buttons, chips (warm near-black) */
+  --linen:       #D9CFB9;   /* photo-block fallback, muted dividers */
+  --stone:       #6B6155;   /* body copy */
+  --card:        #FFFFFF;   /* raised panels — brightest */
+  --line:        #ECE4D4;   /* hairline dividers */
+  --line-strong: #E2D8C4;
+  --stone-mute:  #8C8272;   /* captions, labels */
+  --ink-soft:    #4C453B;   /* body copy inside cards */
+  --fresh:       #4E93A0;   /* fresh teal secondary — accents, fractal */
+  --fresh-tint:  #E9F3F3;   /* pale teal panel background */
+  --warm-tint:   #F5EEDD;   /* warm panel background (replaces old dark sections) */
 
   /* Type */
   --display: 'Bodoni Moda', Georgia, 'Times New Roman', serif;
@@ -74,8 +77,11 @@ p { margin: 0; }
 .lede { font-size: clamp(16px, 1.6vw, 17px); line-height: 1.7; color: var(--stone); }
 .section { padding-block: var(--section-y); }
 .section--card { background: var(--card); border-block: 1px solid var(--line); }
-.section--dark { background: var(--umber); color: var(--linen); }
-.section--dark h1, .section--dark h2, .section--dark h3 { color: var(--bone); }
+/* was a near-black field; now a light warm panel so the page reads bright */
+.section--dark { background: var(--warm-tint); border-block: 1px solid var(--line); }
+.section--fresh { background: var(--fresh-tint); border-block: 1px solid #D6E9E9; }
+.section--fresh .eyebrow { color: var(--fresh); }
+.section--fresh .link-brass { color: var(--fresh); }
 .center { text-align: center; }
 .measure { max-width: 62ch; }
 
@@ -97,10 +103,8 @@ p { margin: 0; }
 .btn-dark:hover  { background: #100b06; }
 .btn-ghost { border-color: var(--umber); color: var(--umber); background: transparent; }
 .btn-ghost:hover { background: var(--umber); color: var(--bone); }
-.btn-brass { background: var(--brass); color: var(--umber); }
-.btn-brass:hover { background: #946f22; }
-.section--dark .btn-ghost { border-color: var(--linen); color: var(--bone); }
-.section--dark .btn-ghost:hover { background: var(--bone); color: var(--umber); }
+.btn-brass { background: var(--brass); color: #fff; }
+.btn-brass:hover { background: #a2782c; }
 .btn-block { width: 100%; }
 .link-brass { color: var(--brass); font-weight: 700; font-size: 14px; }
 .link-brass:hover { text-decoration: underline; }
@@ -150,7 +154,16 @@ p { margin: 0; }
 }
 
 /* -------------------------------------------------------------------- hero */
-.hero { padding-top: clamp(48px, 8vw, 96px); padding-bottom: var(--section-y); }
+.hero { position: relative; overflow: hidden; padding-top: clamp(48px, 8vw, 96px); padding-bottom: var(--section-y); }
+/* subtle recursive-tree canvas, painted by site.js; degrades to nothing */
+.hero__bg {
+  position: absolute; inset: 0; width: 100%; height: 100%;
+  z-index: 0; pointer-events: none; opacity: 0;
+  transition: opacity 1.2s ease;
+}
+.hero__bg.is-on { opacity: .55; }
+@media (prefers-reduced-motion: reduce) { .hero__bg.is-on { opacity: .4; } }
+.hero > .wrap { position: relative; z-index: 1; }
 .hero__grid { display: grid; grid-template-columns: 1.15fr 1fr; gap: clamp(32px, 6vw, 80px); align-items: end; }
 .hero__actions { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 34px; }
 @media (max-width: 900px) {
