@@ -76,16 +76,13 @@
       </div>
 
       <!--
-        FORM STATUS: until a real Formspree form ID replaces YOUR_FORM_ID below,
-        assets/js/site.js intercepts submit and opens a pre-filled email to
-        charlie@shearsrealty.com, so the form works right now. To upgrade to a
-        proper inbox form: create one at https://formspree.io using
-        charlie@shearsrealty.com and paste its ID over YOUR_FORM_ID. The JS
-        fallback then switches itself off automatically. (Netlify Forms is the
-        alternative if you ever move off Vercel — see README-DEPLOY.md.)
+        FORM: posts to Formspree form "Shears Realty Website" (xljeapqz),
+        delivering to charlie@shearsrealty.com. Success redirects to
+        thanks.html via the hidden _next field. The site.js mailto fallback
+        auto-disables now that a real form ID is set.
       -->
       <form class="form-card"
-            action="https://formspree.io/f/YOUR_FORM_ID"
+            action="https://formspree.io/f/xljeapqz"
             method="POST">
 
         <input type="hidden" name="_subject" value="New enquiry from shearsrealty.com">
