@@ -123,7 +123,12 @@
     resize();
     draw(0);
     canvas.classList.add('is-on');
-    if (!reduce) raf = requestAnimationFrame(loop);
+
+    var inView = true; // IntersectionObserver reports before first paint below
+    function start() { if (!reduce && inView && !document.hidden && !raf) { last = 0; raf = requestAnimationFrame(loop); } }
+    function stop() { cancelAnimationFrame(raf); raf = 0; }
+
+    start();
 
     var rt;
     window.addEventListener('resize', function () {
@@ -131,9 +136,15 @@
       rt = setTimeout(function () { resize(); draw(t); }, 150);
     });
     document.addEventListener('visibilitychange', function () {
-      if (document.hidden) { cancelAnimationFrame(raf); raf = 0; }
-      else if (!reduce && !raf) { last = 0; raf = requestAnimationFrame(loop); }
+      if (document.hidden) stop(); else start();
     });
+    // don't burn CPU/battery redrawing a hero nobody can see
+    if ('IntersectionObserver' in window) {
+      new IntersectionObserver(function (entries) {
+        inView = entries[0].isIntersecting;
+        if (inView) start(); else stop();
+      }).observe(host);
+    }
   })();
 
   /* ---- contact form: mailto fallback until Formspree is configured ----
